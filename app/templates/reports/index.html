@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Reports</h1>
+</div>
+
+<!-- Totals -->
+<div class="stats-grid">
+  <div class="stat-tile">
+    <div class="label">Total Expenses (CAD)</div>
+    <div class="value">${{ "%.2f"|format(total_cad) }}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="label">Total GST Captured</div>
+    <div class="value">${{ "%.2f"|format(total_gst) }}</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+  <!-- By Trip -->
+  <div class="card">
+    <div class="card-title">Total by Trip</div>
+    {% if by_trip %}
+    <table>
+      <thead><tr><th>Trip</th><th class="text-right">Total CAD</th><th class="text-right">Count</th></tr></thead>
+      <tbody>
+      {% for row in by_trip %}
+      <tr>
+        <td>{{ row.trip_name }}</td>
+        <td class="text-right">${{ "%.2f"|format(row.total_cad) }}</td>
+        <td class="text-right">{{ row.count }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="text-muted">No data.</p>{% endif %}
+  </div>
+
+  <!-- By Type -->
+  <div class="card">
+    <div class="card-title">Total by Expense Type</div>
+    {% if by_type %}
+    <table>
+      <thead><tr><th>Type</th><th class="text-right">Total CAD</th><th class="text-right">Count</th></tr></thead>
+      <tbody>
+      {% for row in by_type %}
+      <tr>
+        <td>{{ row.expense_type }}</td>
+        <td class="text-right">${{ "%.2f"|format(row.total_cad) }}</td>
+        <td class="text-right">{{ row.count }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="text-muted">No data.</p>{% endif %}
+  </div>
+
+</div>
+
+<!-- By Month -->
+<div class="card">
+  <div class="card-title">Total by Month</div>
+  {% if by_month %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Month</th><th class="text-right">Total CAD</th><th class="text-right">Count</th></tr></thead>
+      <tbody>
+      {% for row in by_month %}
+      <tr>
+        <td>{{ row.month }}</td>
+        <td class="text-right">${{ "%.2f"|format(row.total_cad) }}</td>
+        <td class="text-right">{{ row.count }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}<p class="text-muted">No data.</p>{% endif %}
+</div>
+
+<div class="mt-16 text-center">
+  <a href="/expenses/export/csv" class="btn btn-ghost">Export All Expenses to CSV</a>
+</div>
+{% endblock %}

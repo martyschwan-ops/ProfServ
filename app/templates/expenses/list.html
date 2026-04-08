@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Expenses{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Expenses</h1>
+  <div style="display:flex;gap:8px">
+    <a href="/expenses/export/csv{% if request.query_params %}?{{ request.query_params }}{% endif %}" class="btn btn-ghost btn-sm">Export CSV</a>
+    <a href="/receipts/upload" class="btn btn-primary">+ Upload Receipt</a>
+    <a href="/perdiem/" class="btn btn-ghost">+ Per Diem</a>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<form method="get" action="/expenses/">
+  <div class="filter-bar">
+    <div class="form-group">
+      <label>Search</label>
+      <input type="text" name="search" value="{{ filter.search or '' }}" placeholder="Vendor or file name" />
+    </div>
+    <div class="form-group">
+      <label>Trip</label>
+      <select name="trip_id">
+        <option value="">All Trips</option>
+        {% for t in trips %}
+        <option value="{{ t.trip_id }}" {% if filter.trip_id == t.trip_id %}selected{% endif %}>{{ t.trip_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>From</label>
+      <input type="date" name="date_from" value="{{ filter.date_from or '' }}" />
+    </div>
+    <div class="form-group">
+      <label>To</label>
+      <input type="date" name="date_to" value="{{ filter.date_to or '' }}" />
+    </div>
+    <div class="form-group">
+      <label>Type</label>
+      <select name="expense_type">
+        <option value="">All Types</option>
+        {% for t in expense_types %}
+        <option value="{{ t }}" {% if filter.expense_type and filter.expense_type.value == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Currency</label>
+      <select name="currency">
+        <option value="">All</option>
+        {% for c in currencies %}
+        <option value="{{ c }}" {% if filter.currency and filter.currency.value == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Submitted</label>
+      <select name="submitted">
+        <option value="">All</option>
+        <option value="false" {% if filter.submitted == false %}selected{% endif %}>Not submitted</option>
+        <option value="true" {% if filter.submitted == true %}selected{% endif %}>Submitted</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:6px;align-items:flex-end">
+      <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+      <a href="/expenses/" class="btn btn-ghost btn-sm">Clear</a>
+    </div>
+  </div>
+</form>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+    <span class="text-muted">{{ expenses|length }} record(s)</span>
+    <span><strong>Total CAD: ${{ "%.2f"|format(total_cad) }}</strong></span>
+  </div>
+
+  {% if expenses %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th><th>Vendor</th><th>Type</th><th>Source</th><th>Trip</th>
+          <th class="text-right">Original</th><th class="text-right">CAD</th>
+          <th class="text-right">GST</th><th>Receipt</th><th>Status</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for e in expenses %}
+      <tr>
+        <td style="white-space:nowrap">{{ e.expense_date }}</td>
+        <td>{{ e.vendor_name or "—" }}</td>
+        <td><span class="badge badge-gray">{{ e.expense_type.value }}</span></td>
+        <td>
+          {% if e.source_type.value == "Per Diem" %}
+            <span class="badge badge-blue">Per Diem{% if e.per_diem_type %} – {{ e.per_diem_type.value }}{% endif %}</span>
+          {% elif e.source_type.value == "Receipt" %}
+            <span class="badge badge-green">Receipt</span>
+          {% else %}
+            <span class="badge badge-gray">Manual</span>
+          {% endif %}
+        </td>
+        <td>{{ e.trip_name or "—" }}</td>
+        <td class="text-right" style="white-space:nowrap">
+          {{ e.currency_original.value }} ${{ "%.2f"|format(e.amount_original) }}
+        </td>
+        <td class="text-right">${{ "%.2f"|format(e.amount_cad) }}</td>
+        <td class="text-right">{{ "$%.2f"|format(e.gst_cad) if e.gst_cad else "—" }}</td>
+        <td>
+          {% if e.receipt_file_name %}
+            <span title="{{ e.receipt_file_path }}" style="font-size:12px;color:var(--text-muted)">
+              📎 {{ e.receipt_file_name|truncate(30) }}
+            </span>
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if e.submitted_status %}
+            <span class="badge badge-green">Submitted</span>
+          {% else %}
+            <span class="badge badge-yellow">Pending</span>
+          {% endif %}
+        </td>
+        <td>
+          <div style="display:flex;gap:5px">
+            <a href="/expenses/{{ e.expense_id }}/edit" class="btn btn-ghost btn-sm">Edit</a>
+            <form method="post" action="/expenses/{{ e.expense_id }}/toggle-submitted" style="display:inline">
+              <button type="submit" class="btn btn-ghost btn-sm" title="Toggle submitted">✓</button>
+            </form>
+            <form method="post" action="/expenses/{{ e.expense_id }}/delete"
+                  onsubmit="return confirm('Delete this expense?')" style="display:inline">
+              <button type="submit" class="btn btn-danger btn-sm">✕</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="empty-state">No expenses match your filters.</p>
+  {% endif %}
+</div>
+{% endblock %}

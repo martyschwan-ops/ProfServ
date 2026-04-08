@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Edit Expense{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Edit Expense</h1>
+  <a href="/expenses/" class="btn btn-ghost">← Back to Expenses</a>
+</div>
+
+{% if errors %}
+<div class="alert alert-error">
+  <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div class="card">
+  <form method="post" action="/expenses/{{ expense.expense_id }}/edit">
+    <div class="form-grid cols-3">
+
+      <div class="form-group">
+        <label for="expense_date">Expense Date *</label>
+        <input type="date" id="expense_date" name="expense_date" required
+               value="{{ expense.expense_date }}" />
+      </div>
+
+      <div class="form-group">
+        <label for="vendor_name">Vendor Name</label>
+        <input type="text" id="vendor_name" name="vendor_name"
+               value="{{ expense.vendor_name or '' }}" placeholder="Vendor name" />
+      </div>
+
+      <div class="form-group">
+        <label for="expense_type">Expense Type</label>
+        <select id="expense_type" name="expense_type">
+          {% for t in expense_types %}
+          <option value="{{ t }}" {% if expense.expense_type.value == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="amount_original">Amount *</label>
+        <input type="number" id="amount_original" name="amount_original" required step="0.01" min="0.01"
+               value="{{ expense.amount_original }}" />
+      </div>
+
+      <div class="form-group">
+        <label for="currency_original">Currency</label>
+        <select id="currency_original" name="currency_original">
+          {% for c in currencies %}
+          <option value="{{ c }}" {% if expense.currency_original.value == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="gst_original">GST Amount</label>
+        <input type="number" id="gst_original" name="gst_original" step="0.01" min="0"
+               value="{{ expense.gst_original or '' }}" placeholder="Leave blank if none" />
+      </div>
+
+      <div class="form-group">
+        <label for="exchange_rate_to_cad">Exchange Rate to CAD</label>
+        <input type="number" id="exchange_rate_to_cad" name="exchange_rate_to_cad" step="0.0001" min="0"
+               value="{{ expense.exchange_rate_to_cad or '' }}" placeholder="e.g. 1.3654" />
+      </div>
+
+      <div class="form-group">
+        <label for="amount_cad">Amount CAD (override)</label>
+        <input type="number" id="amount_cad" name="amount_cad" step="0.01" min="0"
+               value="{{ expense.amount_cad or '' }}" placeholder="Leave blank to recalculate" />
+      </div>
+
+      <div class="form-group">
+        <label for="trip_id">Trip</label>
+        <select id="trip_id" name="trip_id">
+          <option value="">— No Trip —</option>
+          {% for t in trips %}
+          <option value="{{ t.trip_id }}" {% if expense.trip_id == t.trip_id %}selected{% endif %}>{{ t.trip_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group full">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes">{{ expense.notes or '' }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <input type="checkbox" name="submitted_status" {% if expense.submitted_status %}checked{% endif %} />
+          Marked as Submitted
+        </label>
+      </div>
+
+    </div>
+
+    {% if expense.receipt_file_name %}
+    <div class="alert alert-success mt-16">
+      <strong>Receipt file:</strong> {{ expense.receipt_file_name }}<br>
+      <span class="text-muted" style="font-size:12px">{{ expense.receipt_file_path }}</span>
+    </div>
+    {% endif %}
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="/expenses/" class="btn btn-ghost">Cancel</a>
+      <form method="post" action="/expenses/{{ expense.expense_id }}/delete"
+            onsubmit="return confirm('Delete this expense? This cannot be undone.')" style="margin-left:auto">
+        <button type="submit" class="btn btn-danger">Delete Expense</button>
+      </form>
+    </div>
+  </form>
+</div>
+{% endblock %}

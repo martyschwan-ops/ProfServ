@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Trips{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Trips</h1>
+  <a href="/trips/new" class="btn btn-primary">+ New Trip</a>
+</div>
+
+<div class="card">
+  {% if trips %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Trip Name</th><th>Start Date</th><th>End Date</th>
+          <th>Duration</th><th>Notes</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for t in trips %}
+      <tr>
+        <td><strong>{{ t.trip_name }}</strong></td>
+        <td>{{ t.start_date }}</td>
+        <td>{{ t.end_date }}</td>
+        <td>{{ (t.end_date - t.start_date).days + 1 }} days</td>
+        <td class="text-muted">{{ t.notes or "—" }}</td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <a href="/trips/{{ t.trip_id }}/edit" class="btn btn-ghost btn-sm">Edit</a>
+            <form method="post" action="/trips/{{ t.trip_id }}/delete"
+                  onsubmit="return confirm('Delete trip {{ t.trip_name }}?')">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="empty-state">No trips yet. <a href="/trips/new">Create your first trip.</a></p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Dashboard</h1>
+  <div style="display:flex;gap:8px">
+    <a href="/receipts/upload" class="btn btn-primary">+ Upload Receipt</a>
+    <a href="/perdiem/" class="btn btn-ghost">+ Per Diem</a>
+  </div>
+</div>
+
+<!-- Stat tiles -->
+<div class="stats-grid">
+  <div class="stat-tile">
+    <div class="label">Total Expenses (CAD)</div>
+    <div class="value">${{ "%.2f"|format(total_cad) }}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="label">Total GST Captured</div>
+    <div class="value">${{ "%.2f"|format(total_gst) }}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="label">Expense Records</div>
+    <div class="value">{{ expense_count }}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="label">Trips</div>
+    <div class="value">{{ trip_count }}</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <!-- By trip -->
+  <div class="card">
+    <div class="card-title">By Trip</div>
+    {% if by_trip %}
+    <table>
+      <thead><tr><th>Trip</th><th class="text-right">Total CAD</th><th class="text-right">#</th></tr></thead>
+      <tbody>
+      {% for row in by_trip %}
+      <tr>
+        <td>{{ row.trip_name }}</td>
+        <td class="text-right">${{ "%.2f"|format(row.total_cad) }}</td>
+        <td class="text-right">{{ row.count }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="text-muted">No expenses yet.</p>{% endif %}
+  </div>
+
+  <!-- By type -->
+  <div class="card">
+    <div class="card-title">By Type</div>
+    {% if by_type %}
+    <table>
+      <thead><tr><th>Type</th><th class="text-right">Total CAD</th><th class="text-right">#</th></tr></thead>
+      <tbody>
+      {% for row in by_type %}
+      <tr>
+        <td>{{ row.expense_type }}</td>
+        <td class="text-right">${{ "%.2f"|format(row.total_cad) }}</td>
+        <td class="text-right">{{ row.count }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="text-muted">No expenses yet.</p>{% endif %}
+  </div>
+</div>
+
+<!-- Recent expenses -->
+<div class="card">
+  <div class="card-title">Recent Expenses</div>
+  {% if recent %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th><th>Vendor</th><th>Type</th><th>Trip</th>
+          <th class="text-right">Amount</th><th class="text-right">CAD</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for e in recent %}
+      <tr>
+        <td>{{ e.expense_date }}</td>
+        <td>{{ e.vendor_name or "—" }}</td>
+        <td><span class="badge badge-gray">{{ e.expense_type.value }}</span></td>
+        <td>{{ e.trip_name or "—" }}</td>
+        <td class="text-right">{{ e.currency_original.value }} ${{ "%.2f"|format(e.amount_original) }}</td>
+        <td class="text-right">${{ "%.2f"|format(e.amount_cad) }}</td>
+        <td><a href="/expenses/{{ e.expense_id }}/edit" class="btn btn-ghost btn-sm">Edit</a></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-8"><a href="/expenses/" class="btn btn-ghost btn-sm">View all expenses →</a></div>
+  {% else %}
+  <p class="empty-state">No expenses recorded yet. <a href="/receipts/upload">Upload a receipt</a> or <a href="/perdiem/">add a per diem</a>.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{% if trip %}Edit Trip{% else %}New Trip{% endif %}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{% if trip %}Edit Trip{% else %}New Trip{% endif %}</h1>
+  <a href="/trips/" class="btn btn-ghost">← Back</a>
+</div>
+
+{% if errors %}
+<div class="alert alert-error">
+  <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div class="card">
+  <form method="post" action="{% if trip %}/trips/{{ trip.trip_id }}/edit{% else %}/trips/new{% endif %}">
+    <div class="form-grid">
+      <div class="form-group full">
+        <label for="trip_name">Trip Name *</label>
+        <input type="text" id="trip_name" name="trip_name" required
+               value="{{ form.trip_name if form else (trip.trip_name if trip else '') }}"
+               placeholder="e.g. Toronto Client Visit Q1 2026" />
+      </div>
+      <div class="form-group">
+        <label for="start_date">Start Date *</label>
+        <input type="date" id="start_date" name="start_date" required
+               value="{{ form.start_date if form else (trip.start_date if trip else '') }}" />
+      </div>
+      <div class="form-group">
+        <label for="end_date">End Date *</label>
+        <input type="date" id="end_date" name="end_date" required
+               value="{{ form.end_date if form else (trip.end_date if trip else '') }}" />
+      </div>
+      <div class="form-group full">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" placeholder="Optional notes">{{ form.notes if form else (trip.notes if trip else '') }}</textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{% if trip %}Save Changes{% else %}Create Trip{% endif %}</button>
+      <a href="/trips/" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

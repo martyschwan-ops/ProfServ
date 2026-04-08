@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Per Diem Entry{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Per Diem Entry</h1>
+</div>
+
+{% if errors %}
+<div class="alert alert-error">
+  <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start">
+  <div class="card">
+    <form method="post" action="/perdiem/">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="expense_date">Date *</label>
+          <input type="date" id="expense_date" name="expense_date" required
+                 value="{{ form.expense_date if form else '' }}" />
+        </div>
+
+        <div class="form-group">
+          <label for="per_diem_type">Meal Type *</label>
+          <select id="per_diem_type" name="per_diem_type" onchange="updateAmount(this.value)">
+            {% for t in perdiem_types %}
+            <option value="{{ t }}" {% if form.per_diem_type == t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="currency">Currency</label>
+          <select id="currency" name="currency" onchange="updateAmount(document.getElementById('per_diem_type').value)">
+            {% for c in currencies %}
+            <option value="{{ c }}" {% if form.currency == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Amount (fixed)</label>
+          <input type="text" id="amount-display" readonly value="" style="background:#f9fafb;color:var(--text-muted)" />
+        </div>
+
+        <div class="form-group">
+          <label for="trip_id">Trip (optional)</label>
+          <select id="trip_id" name="trip_id">
+            <option value="">— Auto-detect by date —</option>
+            {% for t in trips %}
+            <option value="{{ t.trip_id }}" {% if form.trip_id == t.trip_id %}selected{% endif %}>
+              {{ t.trip_name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% if show_fx_override %}
+        <div class="form-group">
+          <label for="exchange_rate_override">Exchange Rate (USD→CAD) *</label>
+          <input type="number" id="exchange_rate_override" name="exchange_rate_override"
+                 step="0.0001" min="0.0001" required placeholder="e.g. 1.3654" />
+          <span class="text-muted" style="font-size:12px">FX lookup failed – enter rate manually</span>
+        </div>
+        {% else %}
+        <input type="hidden" name="exchange_rate_override" value="" />
+        {% endif %}
+
+        <div class="form-group full">
+          <label for="notes">Notes</label>
+          <textarea id="notes" name="notes" placeholder="Optional">{{ form.notes if form else '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save Per Diem</button>
+        <a href="/expenses/" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Rate card -->
+  <div class="card">
+    <div class="card-title">Per Diem Rates (CAD)</div>
+    <table>
+      <tbody>
+        {% for name, amt in amounts.items() %}
+        <tr>
+          <td>{{ name }}</td>
+          <td class="text-right"><strong>${{ "%.0f"|format(amt) }}</strong></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="text-muted mt-8" style="font-size:12px">
+      These are the fixed government per-diem rates.<br>
+      If entered in USD, the historical exchange rate for that date is used to calculate the CAD equivalent.
+    </p>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const amounts = {{ amounts | tojson }};
+function updateAmount(type) {
+  const amt = amounts[type] || 0;
+  const cur = document.getElementById('currency').value;
+  document.getElementById('amount-display').value = cur + ' $' + amt.toFixed(2) + ' (fixed)';
+}
+// Init on load
+updateAmount(document.getElementById('per_diem_type').value);
+</script>
+{% endblock %}

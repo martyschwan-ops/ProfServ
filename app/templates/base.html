@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}ProfServ{% endblock %} – Expense Tracker</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ProfServ</a>
+    <a href="/"         class="{% if request.url.path == '/' %}active{% endif %}">Dashboard</a>
+    <a href="/trips/"   class="{% if '/trips' in request.url.path %}active{% endif %}">Trips</a>
+    <a href="/expenses/" class="{% if '/expenses' in request.url.path %}active{% endif %}">Expenses</a>
+    <a href="/receipts/upload" class="{% if '/receipts' in request.url.path %}active{% endif %}">Upload Receipt</a>
+    <a href="/perdiem/" class="{% if '/perdiem' in request.url.path %}active{% endif %}">Per Diem</a>
+    <a href="/reports/" class="{% if '/reports' in request.url.path %}active{% endif %}">Reports</a>
+  </nav>
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+
+  <script>
+    // Drag-and-drop support for drop zones
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+      zone.addEventListener('click', () => zone.querySelector('input[type=file]').click());
+      zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const input = zone.querySelector('input[type=file]');
+        if (e.dataTransfer.files.length) {
+          input.files = e.dataTransfer.files;
+          zone.querySelector('.drop-label').textContent = e.dataTransfer.files[0].name;
+        }
+      });
+      const input = zone.querySelector('input[type=file]');
+      if (input) {
+        input.addEventListener('change', () => {
+          if (input.files.length) zone.querySelector('.drop-label').textContent = input.files[0].name;
+        });
+      }
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
