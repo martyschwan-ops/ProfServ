@@ -19,7 +19,7 @@ from app.services.workbook_service import workbook_service
 from config import settings
 
 router = APIRouter(prefix="/perdiem")
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=str(settings.templates_dir))
 
 _PERDIEM_AMOUNTS = {
     PerDiemType.BREAKFAST: settings.breakfast_amount,

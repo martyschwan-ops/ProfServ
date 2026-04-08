@@ -5,16 +5,14 @@ Run with:
     uvicorn main:app --reload --host 127.0.0.1 --port 8000
 """
 import logging
-from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.routes import dashboard, expenses, perdiem, receipts, reports, trips
 from bootstrap import bootstrap
-from config import settings
+from config import BASE_DIR, settings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,13 +22,12 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="ProfServ – Expense Tracker", version="1.0.0")
 
-# ── Static files ──────────────────────────────────────────────────────────────
-static_dir = Path("app/static")
-static_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+# ── Static files (absolute path so it works regardless of cwd) ────────────────
+settings.static_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(settings.static_dir)), name="static")
 
-# ── Templates ─────────────────────────────────────────────────────────────────
-templates = Jinja2Templates(directory="app/templates")
+# ── Templates (absolute path) ─────────────────────────────────────────────────
+templates = Jinja2Templates(directory=str(settings.templates_dir))
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────

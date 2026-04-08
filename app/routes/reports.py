@@ -3,9 +3,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app.services.workbook_service import workbook_service
+from config import settings
 
 router = APIRouter(prefix="/reports")
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=str(settings.templates_dir))
 
 
 @router.get("/", response_class=HTMLResponse)

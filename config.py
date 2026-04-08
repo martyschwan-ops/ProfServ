@@ -1,15 +1,17 @@
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Absolute path to the project root (the directory containing this file)
+BASE_DIR = Path(__file__).parent.resolve()
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=str(BASE_DIR / ".env"), env_file_encoding="utf-8", extra="ignore")
 
-    # Paths
-    data_dir: Path = Path("data")
-    receipts_dir: Path = Path("receipts")
+    # Paths (resolved to absolute at startup via properties)
+    data_dir: Path = BASE_DIR / "data"
+    receipts_dir: Path = BASE_DIR / "receipts"
     workbook_name: str = "expenses.xlsx"
-    fx_cache_file: str = "data/fx_cache.json"
 
     # AI extraction provider
     extraction_provider: str = "mock"  # mock | anthropic | openai
@@ -17,7 +19,7 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
 
     # FX provider
-    fx_provider: str = "frankfurter"  # frankfurter | manual
+    fx_provider: str = "frankfurter"
 
     # Per-diem amounts (CAD)
     breakfast_amount: float = 20.0
@@ -32,6 +34,18 @@ class Settings(BaseSettings):
     @property
     def workbook_path(self) -> Path:
         return self.data_dir / self.workbook_name
+
+    @property
+    def fx_cache_file(self) -> Path:
+        return self.data_dir / "fx_cache.json"
+
+    @property
+    def templates_dir(self) -> Path:
+        return BASE_DIR / "app" / "templates"
+
+    @property
+    def static_dir(self) -> Path:
+        return BASE_DIR / "app" / "static"
 
 
 settings = Settings()

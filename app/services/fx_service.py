@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 _FRANKFURTER_BASE = "https://api.frankfurter.dev/v1"
 _CACHE: Dict[str, float] = {}  # in-memory cache: "YYYY-MM-DD:FROM:TO" -> rate
-_CACHE_FILE: Path = Path(settings.fx_cache_file)
+_CACHE_FILE: Path = settings.fx_cache_file
 
 
 def _cache_key(d: date, from_currency: str, to_currency: str) -> str:

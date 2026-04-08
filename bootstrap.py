@@ -3,7 +3,6 @@ Bootstrap script – run once on first startup to create the workbook and folder
 Called automatically by main.py on startup.
 """
 import logging
-from pathlib import Path
 
 from config import settings
 
@@ -11,12 +10,14 @@ logger = logging.getLogger(__name__)
 
 
 def bootstrap() -> None:
-    # Create required directories
+    # Create required directories (all absolute paths from config)
     dirs = [
         settings.data_dir,
         settings.receipts_dir,
         settings.receipts_dir / "unassigned",
         settings.data_dir / "tmp_uploads",
+        settings.static_dir,
+        settings.templates_dir,
     ]
     for d in dirs:
         d.mkdir(parents=True, exist_ok=True)

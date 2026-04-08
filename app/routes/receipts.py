@@ -21,9 +21,10 @@ from app.models.expense import (
 from app.services import file_storage_service as fss
 from app.services.receipt_pipeline import run_pipeline
 from app.services.workbook_service import workbook_service
+from config import settings
 
 router = APIRouter(prefix="/receipts")
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=str(settings.templates_dir))
 
 # In-memory session store for pending extractions keyed by temp_key.
 # Fine for single-user local app.
