@@ -7,10 +7,9 @@ from fastapi.templating import Jinja2Templates
 
 from app.models.trip import Trip, TripCreate
 from app.services.workbook_service import workbook_service
-from config import settings
+from app.templating import templates
 
 router = APIRouter(prefix="/trips")
-templates = Jinja2Templates(directory=str(settings.templates_dir))
 
 
 @router.get("/", response_class=HTMLResponse)

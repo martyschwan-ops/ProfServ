@@ -8,11 +8,11 @@ import logging
 
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 
 from app.routes import dashboard, expenses, perdiem, receipts, reports, trips
+from app.templating import templates
 from bootstrap import bootstrap
-from config import BASE_DIR, settings
+from config import settings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,10 +25,6 @@ app = FastAPI(title="ProfServ – Expense Tracker", version="1.0.0")
 # ── Static files (absolute path so it works regardless of cwd) ────────────────
 settings.static_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(settings.static_dir)), name="static")
-
-# ── Templates (absolute path) ─────────────────────────────────────────────────
-templates = Jinja2Templates(directory=str(settings.templates_dir))
-
 
 # ── Startup ───────────────────────────────────────────────────────────────────
 @app.on_event("startup")

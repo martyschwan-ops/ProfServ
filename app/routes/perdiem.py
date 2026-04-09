@@ -16,10 +16,10 @@ from app.models.expense import (
 )
 from app.services.fx_service import convert_to_cad
 from app.services.workbook_service import workbook_service
+from app.templating import templates
 from config import settings
 
 router = APIRouter(prefix="/perdiem")
-templates = Jinja2Templates(directory=str(settings.templates_dir))
 
 _PERDIEM_AMOUNTS = {
     PerDiemType.BREAKFAST: settings.breakfast_amount,
