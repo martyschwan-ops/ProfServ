@@ -105,8 +105,8 @@ async def confirm_receipt(
     expense_type: str = Form("Unknown"),
     amount_original: float = Form(...),
     currency_original: str = Form("CAD"),
-    exchange_rate_override: Optional[float] = Form(None),
-    gst_original: Optional[float] = Form(None),
+    exchange_rate_override: Optional[str] = Form(None),
+    gst_original: Optional[str] = Form(None),
     trip_id: Optional[str] = Form(None),
     notes: Optional[str] = Form(None),
 ):
@@ -129,7 +129,18 @@ async def confirm_receipt(
     if amount_original <= 0:
         errors.append("Amount must be greater than zero.")
 
-    if gst_original and amount_original and gst_original > amount_original:
+    # Parse optional float fields from form strings
+    def _pf(v: Optional[str]) -> Optional[float]:
+        if not v or not v.strip():
+            return None
+        try:
+            return float(v.strip())
+        except ValueError:
+            return None
+
+    parsed_gst = _pf(gst_original)
+
+    if parsed_gst and parsed_gst > amount_original:
         errors.append("GST cannot exceed total amount.")
 
     if errors:
@@ -147,11 +158,19 @@ async def confirm_receipt(
     # FX conversion
     from app.services.fx_service import convert_to_cad
     fx_flag = False
+    # Convert string form value to float (empty string → None)
+    fx_override: Optional[float] = None
+    if exchange_rate_override and exchange_rate_override.strip():
+        try:
+            fx_override = float(exchange_rate_override.strip())
+        except ValueError:
+            errors.append("Exchange rate must be a valid number.")
+
     if currency_original == "CAD":
         amount_cad = amount_original
         rate = 1.0
-    elif exchange_rate_override:
-        rate = exchange_rate_override
+    elif fx_override:
+        rate = fx_override
         amount_cad = round(amount_original * rate, 2)
     else:
         amount_cad_val, rate = convert_to_cad(amount_original, exp_date, currency_original)
@@ -163,11 +182,11 @@ async def confirm_receipt(
             amount_cad = amount_cad_val
 
     gst_cad = None
-    if gst_original:
+    if parsed_gst:
         if currency_original == "CAD":
-            gst_cad = gst_original
+            gst_cad = parsed_gst
         elif rate:
-            gst_cad = round(gst_original * rate, 2)
+            gst_cad = round(parsed_gst * rate, 2)
 
     # Resolve trip
     trip_name = None
@@ -201,7 +220,7 @@ async def confirm_receipt(
         currency_original=Currency(currency_original),
         exchange_rate_to_cad=rate,
         amount_cad=amount_cad,
-        gst_original=gst_original,
+        gst_original=parsed_gst,
         gst_cad=gst_cad,
         source_type=SourceType.RECEIPT,
         receipt_file_name=receipt_file_name,

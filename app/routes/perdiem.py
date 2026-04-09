@@ -49,7 +49,7 @@ async def create_perdiem(
     per_diem_type: str = Form(...),
     currency: str = Form("CAD"),
     trip_id: Optional[str] = Form(None),
-    exchange_rate_override: Optional[float] = Form(None),
+    exchange_rate_override: Optional[str] = Form(None),
     notes: Optional[str] = Form(None),
 ):
     errors = []
@@ -92,11 +92,19 @@ async def create_perdiem(
     amount_original = _PERDIEM_AMOUNTS[pd_type]
     fx_flag = False
 
+    # Convert string form value to float (empty string → None)
+    fx_override: Optional[float] = None
+    if exchange_rate_override and exchange_rate_override.strip():
+        try:
+            fx_override = float(exchange_rate_override.strip())
+        except ValueError:
+            errors.append("Exchange rate must be a valid number.")
+
     if cur == Currency.CAD:
         amount_cad = amount_original
         rate: Optional[float] = 1.0
-    elif exchange_rate_override:
-        rate = exchange_rate_override
+    elif fx_override:
+        rate = fx_override
         amount_cad = round(amount_original * rate, 2)
     else:
         amount_cad_val, rate = convert_to_cad(amount_original, exp_date, cur.value)

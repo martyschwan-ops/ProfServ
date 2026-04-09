@@ -67,9 +67,9 @@ async def update_expense(
     expense_type: str = Form("Unknown"),
     amount_original: float = Form(...),
     currency_original: str = Form("CAD"),
-    exchange_rate_to_cad: Optional[float] = Form(None),
-    amount_cad: Optional[float] = Form(None),
-    gst_original: Optional[float] = Form(None),
+    exchange_rate_to_cad: Optional[str] = Form(None),
+    amount_cad: Optional[str] = Form(None),
+    gst_original: Optional[str] = Form(None),
     trip_id: Optional[str] = Form(None),
     notes: Optional[str] = Form(None),
     submitted_status: Optional[str] = Form(None),
@@ -95,26 +95,39 @@ async def update_expense(
         if trip:
             trip_name = trip.trip_name
 
+    # Parse optional float fields from form strings
+    def _parse_form_float(v: Optional[str]) -> Optional[float]:
+        if not v or not v.strip():
+            return None
+        try:
+            return float(v.strip())
+        except ValueError:
+            return None
+
+    parsed_rate = _parse_form_float(exchange_rate_to_cad)
+    parsed_amount_cad = _parse_form_float(amount_cad)
+
     # FX conversion
     if currency_original == "CAD":
         final_amount_cad = amount_original
         final_rate = 1.0
     else:
-        if amount_cad and amount_cad > 0:
-            final_amount_cad = amount_cad
-            final_rate = exchange_rate_to_cad or (amount_cad / amount_original if amount_original else None)
+        if parsed_amount_cad and parsed_amount_cad > 0:
+            final_amount_cad = parsed_amount_cad
+            final_rate = parsed_rate or (parsed_amount_cad / amount_original if amount_original else None)
         else:
             from app.services.fx_service import convert_to_cad
             cad, rate = convert_to_cad(amount_original, exp_date, currency_original)
             final_amount_cad = cad or amount_original
             final_rate = rate
 
+    parsed_gst = _parse_form_float(gst_original)
     gst_cad = None
-    if gst_original:
+    if parsed_gst:
         if currency_original == "CAD":
-            gst_cad = gst_original
+            gst_cad = parsed_gst
         elif final_rate:
-            gst_cad = round(gst_original * final_rate, 2)
+            gst_cad = round(parsed_gst * final_rate, 2)
 
     if errors:
         trips = workbook_service.list_trips()
@@ -132,7 +145,7 @@ async def update_expense(
     expense.currency_original = Currency(currency_original)
     expense.exchange_rate_to_cad = final_rate
     expense.amount_cad = final_amount_cad
-    expense.gst_original = gst_original
+    expense.gst_original = parsed_gst
     expense.gst_cad = gst_cad
     expense.trip_id = trip_id or None
     expense.trip_name = trip_name
