@@ -46,9 +46,27 @@ app.include_router(reports.router)
 # ── Global error handler ──────────────────────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
+    tb = traceback.format_exc()
     logger.exception("Unhandled error on %s %s", request.method, request.url)
-    return templates.TemplateResponse(
-        "error.html",
-        {"request": request, "detail": str(exc)},
-        status_code=500,
-    )
+    try:
+        return templates.TemplateResponse(
+            "error.html",
+            {
+                "request": request,
+                "detail": f"{type(exc).__name__}: {exc}",
+                "traceback": tb,
+                "templates_dir": str(settings.templates_dir),
+            },
+            status_code=500,
+        )
+    except Exception:
+        # Absolute fallback if even error.html can't be rendered
+        from fastapi.responses import PlainTextResponse
+        return PlainTextResponse(
+            f"FATAL: error.html also missing.\n\n"
+            f"templates_dir = {settings.templates_dir}\n"
+            f"templates_dir exists = {settings.templates_dir.exists()}\n\n"
+            f"{tb}",
+            status_code=500,
+        )

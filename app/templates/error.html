@@ -4,6 +4,17 @@
 <div class="page-header"><h1>Something went wrong</h1></div>
 <div class="card">
   <div class="alert alert-error">{{ detail }}</div>
+  {% if templates_dir %}
+  <p class="text-muted" style="font-size:12px;margin-bottom:8px">
+    <strong>Templates dir:</strong> {{ templates_dir }}
+  </p>
+  {% endif %}
+  {% if traceback %}
+  <details style="margin-bottom:12px">
+    <summary style="cursor:pointer;font-size:12px;color:var(--text-muted)">Full traceback (share this when reporting the error)</summary>
+    <pre style="font-size:11px;white-space:pre-wrap;background:#f8f8f8;padding:12px;border-radius:4px;margin-top:8px;overflow-x:auto">{{ traceback }}</pre>
+  </details>
+  {% endif %}
   <a href="/" class="btn btn-ghost">Back to Dashboard</a>
 </div>
 {% endblock %}
