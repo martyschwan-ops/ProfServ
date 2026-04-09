@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Review Extracted Receipt{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Review Extracted Receipt</h1>
+  <a href="/receipts/upload" class="btn btn-ghost">← Upload Another</a>
+</div>
+
+{% if errors %}
+<div class="alert alert-error">
+  <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<!-- Extraction status -->
+<div class="card" style="margin-bottom:16px">
+  <div class="card-title">Extraction Result</div>
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <div>
+      <span class="text-muted" style="font-size:12px">File:</span>
+      <strong>{{ original_filename }}</strong>
+    </div>
+    <div>
+      <span class="text-muted" style="font-size:12px">Confidence:</span>
+      <div class="confidence-bar" style="display:inline-block;vertical-align:middle;margin-left:6px">
+        <div class="confidence-bar-fill" style="width:{{ (result.confidence * 100)|int }}%"></div>
+      </div>
+      <span style="font-size:12px;margin-left:6px">{{ (result.confidence * 100)|int }}%</span>
+    </div>
+  </div>
+
+  {% if result.flags %}
+  <div class="mt-8">
+    <span class="text-muted" style="font-size:12px">Flags:</span>
+    {% for flag in result.flags %}
+    <span class="flag-chip">{{ flag }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Edit form -->
+<div class="card">
+  <div class="card-title">Verify and Correct Fields</div>
+  <p class="text-muted" style="margin-bottom:16px;font-size:13px">
+    Review all extracted fields before saving. All fields are editable.
+    The expense will only be saved after you confirm below.
+  </p>
+
+  <form method="post" action="/receipts/confirm/{{ temp_key }}">
+    <div class="form-grid cols-3">
+
+      <div class="form-group">
+        <label for="expense_date">Expense Date *
+          {% if 'date_not_found' in result.flags or 'date_ambiguous' in result.flags %}
+          <span class="flag-chip">check</span>{% endif %}
+        </label>
+        <input type="date" id="expense_date" name="expense_date" required
+               value="{{ result.expense_date or '' }}" />
+      </div>
+
+      <div class="form-group">
+        <label for="vendor_name">Vendor Name *
+          {% if 'vendor_not_found' in result.flags or 'vendor_unclear' in result.flags %}
+          <span class="flag-chip">check</span>{% endif %}
+        </label>
+        <input type="text" id="vendor_name" name="vendor_name" required
+               value="{{ result.vendor_name or '' }}" placeholder="Required" />
+      </div>
+
+      <div class="form-group">
+        <label for="expense_type">Expense Type</label>
+        <select id="expense_type" name="expense_type">
+          {% for t in expense_types %}
+          <option value="{{ t }}" {% if result.expense_type == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="amount_original">Total Amount *
+          {% if 'amount_not_found' in result.flags %}
+          <span class="flag-chip">check</span>{% endif %}
+        </label>
+        <input type="number" id="amount_original" name="amount_original" required step="0.01" min="0.01"
+               value="{{ result.total_amount or '' }}" placeholder="0.00" />
+      </div>
+
+      <div class="form-group">
+        <label for="currency_original">Currency</label>
+        <select id="currency_original" name="currency_original">
+          {% for c in currencies %}
+          <option value="{{ c }}" {% if result.currency == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="gst_original">GST Amount</label>
+        <input type="number" id="gst_original" name="gst_original" step="0.01" min="0"
+               value="{{ result.gst_amount or '' }}" placeholder="Leave blank if none" />
+      </div>
+
+      <div class="form-group">
+        <label for="trip_id">Trip</label>
+        <select id="trip_id" name="trip_id">
+          <option value="">— No Trip —</option>
+          {% for t in trips %}
+          <option value="{{ t.trip_id }}"
+            {% if suggested_trip_id == t.trip_id %}selected{% endif %}>
+            {{ t.trip_name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="exchange_rate_override">Exchange Rate Override (optional)</label>
+        <input type="number" id="exchange_rate_override" name="exchange_rate_override"
+               step="0.0001" min="0" placeholder="Auto-fetched if blank" />
+      </div>
+
+      <div class="form-group full">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" placeholder="Optional"></textarea>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Confirm and Save Expense</button>
+      <a href="/receipts/upload" class="btn btn-ghost">Discard</a>
+    </div>
+  </form>
+</div>
+
+<!-- Raw text panel -->
+{% if result.raw_text %}
+<details class="card" style="margin-top:16px">
+  <summary style="cursor:pointer;font-weight:600;padding:4px 0">
+    Raw Extracted Text ({{ result.raw_text|length }} chars)
+  </summary>
+  <pre style="margin-top:12px;white-space:pre-wrap;font-size:12px;color:var(--text-muted);max-height:300px;overflow-y:auto">{{ result.raw_text }}</pre>
+</details>
+{% endif %}
+{% endblock %}

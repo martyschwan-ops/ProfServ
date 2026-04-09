@@ -14,8 +14,8 @@ data/expenses.xlsx
 data/fx_cache.json
 data/tmp_uploads/
 
-# Receipts (user files – do not commit)
-receipts/
+# Receipts (user files – do not commit; /receipts/ matches root only)
+/receipts/
 
 # macOS
 .DS_Store

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Upload Receipt{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Upload Receipt</h1>
+</div>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<div class="card">
+  <form method="post" action="/receipts/upload" enctype="multipart/form-data" id="upload-form">
+    <div class="form-group" style="margin-bottom:16px">
+      <label class="drop-zone" for="file-input" style="display:block">
+        <input type="file" id="file-input" name="file" accept=".pdf,.jpg,.jpeg,.png,.tiff,.tif" required />
+        <div style="font-size:36px;margin-bottom:8px">📄</div>
+        <div class="drop-label">Drop a PDF or image here, or click to browse</div>
+        <div class="text-muted mt-8" style="font-size:12px">Supported: PDF, JPG, PNG, TIFF</div>
+      </label>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="trip_id">Assign to Trip (optional)</label>
+        <select id="trip_id" name="trip_id">
+          <option value="">— Auto-detect or unassigned —</option>
+          {% for t in trips %}
+          <option value="{{ t.trip_id }}">{{ t.trip_name }} ({{ t.start_date }} – {{ t.end_date }})</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" id="upload-btn">Upload and Extract</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-title">How it works</div>
+  <ol style="padding-left:18px;line-height:2">
+    <li>Upload a PDF or photo of your receipt</li>
+    <li>The app extracts text and uses AI to identify the key fields</li>
+    <li>Review and correct any extracted fields</li>
+    <li>Confirm to save the expense and file the receipt</li>
+  </ol>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('upload-form').addEventListener('submit', () => {
+  document.getElementById('upload-btn').textContent = 'Extracting…';
+  document.getElementById('upload-btn').disabled = true;
+});
+</script>
+{% endblock %}
